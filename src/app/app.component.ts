@@ -1,32 +1,78 @@
 import { Component } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
+import { map, shareReplay } from 'rxjs/operators';
+import { Router, RouterEvent, NavigationStart, NavigationEnd } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <!--The content below is only a placeholder and can be replaced.-->
-    <div style="text-align:center" class="content">
-      <h1>
-        Welcome to {{title}}!
-      </h1>
-      <span style="display: block">{{ title }} app is running!</span>
-      <img width="300" alt="Angular Logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
-    </div>
-    <h2>Here are some links to help you start: </h2>
-    <ul>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/cli">CLI Documentation</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://blog.angular.io/">Angular blog</a></h2>
-      </li>
-    </ul>
-    <router-outlet></router-outlet>
+  template: `  
+  <mat-sidenav-container class="sidenav-container">  
+    <mat-sidenav #drawer class="sidenav" fixedInViewport
+        [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+        [mode]="(isHandset$ | async) ? 'over' : 'side'"
+        [opened]="(isHandset$ | async) === false">
+      <mat-toolbar>Menu</mat-toolbar>
+      <mat-nav-list>
+        <a mat-list-item  (click)="drawer.toggle()" [routerLink]="['/code-splitting']" routerLinkActive="router-link-active" >Code-splitting</a>
+        <a mat-list-item (click)="drawer.toggle()"  [routerLink]="['/pwa']"  routerLinkActive="router-link-active">PWA</a>
+        <a mat-list-item (click)="drawer.toggle()" href="#">Links</a>
+      </mat-nav-list>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <mat-toolbar color="primary">
+        <button
+          type="button"
+          aria-label="Toggle sidenav"
+          mat-icon-button
+          (click)="drawer.toggle()"
+          *ngIf="isHandset$ | async">
+          <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+        </button>
+        <span [routerLink]="['/']" >ng-optimization</span>
+        <span class="example-spacer"></span>
+        <mat-icon class="example-icon" routerLink="code-splitting">favorite</mat-icon>
+        <mat-icon class="example-icon" routerLink="pwa" aria-hidden="false" aria-label="Example delete icon">home</mat-icon>
+      </mat-toolbar> 
+      <!-- Add Content Here -->
+      <div class="main-content">
+        <router-outlet></router-outlet>
+        <span class="loader" *ngIf="routerLoading">
+          <mat-spinner></mat-spinner>
+        </span>
+      </div>      
+    </mat-sidenav-content>
+</mat-sidenav-container>  
   `,
   styles: []
 })
 export class AppComponent {
   title = 'ng-optimization';
+
+  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
+    .pipe(
+      map(result => result.matches),
+      shareReplay()
+    );
+  
+  routerLoading = false;
+  httpLoading   = false;
+  
+   constructor(
+                private breakpointObserver: BreakpointObserver,
+                private router: Router
+              ) 
+    {
+           this.routerLoading= false;
+           router.events.subscribe( (event: RouterEvent): void => {
+               if (event instanceof NavigationStart) {
+                 this.routerLoading= true;
+               } else if (event instanceof NavigationEnd) {
+                 this.routerLoading= false;
+               }
+             }
+           );
+
+   }
 }
