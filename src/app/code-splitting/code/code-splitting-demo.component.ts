@@ -29,16 +29,10 @@ export class CodeSplittingDemoComponent implements OnInit {
   }
 
   async loadCode(){
-    // import('https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js')
-    const { CompilerConfig , JitCompiler , ViewCompiler } = await import( '@angular/compiler');
     const {JitCompilerFactory} = await import('@angular/platform-browser-dynamic');
-
     const jit :any = JitCompilerFactory;
-
     const compilerFactory = new jit([{useJit:true}]);
-
     const compiler = compilerFactory.createCompiler([{useJit:true}]);
-
     this.compilerLoaded = true;
     
   }

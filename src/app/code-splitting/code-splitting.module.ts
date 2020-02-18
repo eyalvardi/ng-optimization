@@ -19,6 +19,10 @@ import { CodeSplittingDemoComponent } from './code/code-splitting-demo.component
           { path : 'code'      , component : CodeSplittingDemoComponent  },
           { path : 'component' , component : CmpSplittingDemoComponent   },
           { 
+            path : 'shapes',
+            loadChildren : ()=> import('./component/shapes/shapes.module').then(m=> m.ShapesModule)
+          },
+          { 
             path : 'router'    , 
             loadChildren : ()=> import('./router/router-splitting.module')
                                   .then(m=>m.RouterSplittingModule)
@@ -27,8 +31,10 @@ import { CodeSplittingDemoComponent } from './code/code-splitting-demo.component
       }
     ]),
     MatTabsModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
   ],
-  declarations: [SplittingDemosComponent]
+  declarations: [SplittingDemosComponent],  
 })
-export class CodeSplittingModule { }
+export class CodeSplittingModule { 
+
+}

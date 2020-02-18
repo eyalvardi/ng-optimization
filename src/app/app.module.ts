@@ -24,7 +24,6 @@ import { PwaDemosComponent } from './pwa/pwa-demos.component';
     HttpClientModule,  
 
     ServiceWorkerModule.register('./ngsw-worker.js', { enabled: environment.production }),
-
     // My Modules
     AppRoutingModule,
     MyMaterialModule

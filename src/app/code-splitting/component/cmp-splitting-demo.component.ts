@@ -1,6 +1,7 @@
-import { Component, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, ComponentFactoryResolver, NgModule, ComponentRef, ElementRef } from '@angular/core';
+import { environment } from './../../../environments/environment';
+import { codeSamples, CodeSample } from './samples-code';
+import { Component, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, ComponentFactoryResolver, ComponentRef, ElementRef } from '@angular/core';
 import { Loader } from './loader.class';
-import { CommonModule } from '@angular/common';
 import { Shape } from './shapes/shapes.module';
 
 @Component({
@@ -17,16 +18,20 @@ import { Shape } from './shapes/shapes.module';
       <h4>View Container Ref</h4> 
       <ng-template #cmpArea></ng-template>
     </div>
-    <div>
-      <!-- <h4> Component Outlet</h4>
-      <ng-container *ngComponentOutlet="dynamicComponent" ></ng-container> -->
-
-    <textarea class="code" #html wrap="off">       
-      <triangle name="1"></triangle>
-      <circle name="2"></circle>      
-      <square name="4"></square>
-    </textarea>
-    <button (click)="shapesDemo()">Create Angular Component</button>
+    <div class="code-area">
+      <div class="samples">
+            <button (click)="setCodeSample('sample1')">Sample 1</button>       
+            <button (click)="setCodeSample('sample2')">Sample 2</button>       
+            <button (click)="setCodeSample('sample3')">Sample 3</button>
+      </div>
+      <div class="html-area">
+        <textarea #html wrap="off" class="code">
+            {{code}}
+        </textarea> 
+      </div>
+      <div>
+        <button (click)="shapesDemo()">Create Angular Component</button>
+      </div>
     </div>
   </div>
 
@@ -41,6 +46,7 @@ export class CmpSplittingDemoComponent {
   @ViewChild('cmpArea', { read: ViewContainerRef }) cmpArea: ViewContainerRef;
   @ViewChild('html') htmlCode: ElementRef;
 
+  code = codeSamples.sample1;
 
   loader: Loader;
 
@@ -52,47 +58,41 @@ export class CmpSplittingDemoComponent {
     this.loader = new Loader(compiler, injector, resolver);
   }
 
+  setCodeSample( sample : CodeSample ){    
+    this.code = codeSamples[sample];
+  }
 
   async shapesDemo() {
     const html = this.htmlCode.nativeElement.value;
-    const { ShapesModule } = await import(`./shapes/shapes.module`);
-    const componentFactory = await this.loader.createComponentOnTheFly(html, ShapesModule);
+    let shapesModule;
+    const components = await Promise.all([
+                this.importShapeComponent('circle'),
+                this.importShapeComponent('triangle'),
+                this.importShapeComponent('square'),
+                this.importShapeComponent('rectangle')
+              ]);
+
+    if(!environment.production){
+      const m = await import('./shapes/shapes.module')
+      shapesModule = m.ShapesModule
+    }          
+    const componentFactory = await this.loader
+              .createComponentOnTheFly( html , components , [shapesModule] );
 
     this.createComponent(componentFactory);
-  }
-
-
-  async getDynamicComponent(html: string = '', ...components) {
-
-    class DynamicComponent { }
-
-    const dynamicComponent = Component({ template: html })(DynamicComponent);
-
-    class DynamicModule { }
-
-    const dynamicModule = NgModule({
-      imports: [CommonModule],
-      declarations: [dynamicComponent, ...components]
-    })(DynamicModule);
-
-    let module = await this.compiler.compileModuleAndAllComponentsAsync(DynamicModule);
-    const moduleRef = module.ngModuleFactory.create(this.injector);
-
-    const componentFactory = moduleRef.componentFactoryResolver.resolveComponentFactory(DynamicComponent)
-    const componentRef = this.cmpArea.createComponent(componentFactory);
-    componentRef.onDestroy(() => {
-      componentRef.changeDetectorRef.detach();
-    });
   }
 
   async loadComponent(shape: Shape = 'circle') {
+    const cmpClass = await this.importShapeComponent(shape);
+    const componentFactory = this.resolver.resolveComponentFactory(cmpClass);
+    this.createComponent(componentFactory);
+  }
+
+  async importShapeComponent(shape: Shape){
     const shapeName = shape.replace(/^\w/, c => c.toUpperCase());
     const cmpClass = await import(`./shapes/components/${shape}.component`)
       .then(module => module[`${shapeName}Component`]);
-    this.dynamicComponent = cmpClass;
-
-    const componentFactory = this.resolver.resolveComponentFactory(cmpClass);
-    this.createComponent(componentFactory);
+      return cmpClass;
   }
 
   createComponent(componentFactory: any): ComponentRef<any> {

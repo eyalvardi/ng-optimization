@@ -5,12 +5,10 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-
     "dev:ssr": "ng run ng-optimization:serve-ssr",
     "serve:ssr": "node dist/ng-optimization/server/main.js",
     "build:ssr": "ng build --prod && ng run ng-optimization:server:production",
     "prerender": "ng run ng-optimization:prerender",
-
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"

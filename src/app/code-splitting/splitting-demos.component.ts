@@ -23,7 +23,7 @@ import { Router, RouterEvent, NavigationStart, NavigationEnd } from '@angular/ro
 })
 export class SplittingDemosComponent implements OnInit {
 
-  navLinks = [ 'router' , 'code' , 'component'  ];
+  navLinks = [ 'router' , 'shapes' , 'code' , 'component'  ];
   
 
 
